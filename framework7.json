@@ -1,0 +1,18 @@
+{
+  "cwd": "D:\\Web-Engineering-2",
+  "type": [
+    "pwa"
+  ],
+  "name": "Web-Engineering-2",
+  "framework": "react",
+  "template": "blank",
+  "bundler": "vite",
+  "cssPreProcessor": false,
+  "theming": {
+    "customColor": true,
+    "color": "#007aff",
+    "darkMode": true,
+    "iconFonts": true
+  },
+  "customBuild": false
+}
