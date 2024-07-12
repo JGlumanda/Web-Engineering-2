@@ -1,1 +1,7 @@
-/* Your app custom styles here */
+/* MyApp.css */
+.safe-areas {
+    padding-top: var(--f7-safe-area-top);
+    padding-right: var(--f7-safe-area-right);
+    padding-bottom: var(--f7-safe-area-bottom);
+    padding-left: var(--f7-safe-area-left);
+}
