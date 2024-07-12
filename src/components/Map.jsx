@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, useMapEvents, Marker, Popup } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import '../css/Map.css';
 import LocationMarker from './LocationMarker';
+import {reverseGeocode} from "@/js/reverseGeocode";
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -56,6 +57,7 @@ const FlyToMarker = ({ position, popupText }) => {
 const Map = () => {
     const [currentPosition, setCurrentPosition] = useState(null);
     const [selectedPosition, setSelectedPosition] = useState(null);
+    const [locationInfo, setLocationInfo] = useState(null);
     const [error, setError] = useState(null);
 
     // Bestimmt den aktuellen Standort des Nutzers
@@ -71,13 +73,19 @@ const Map = () => {
     }, []);
 
     // Handhabt das Klicken auf die Karte und setzt die ausgewählte Position
-    const handleMapClick = (latlng) => {
+    const handleMapClick = async (latlng) => {
         setSelectedPosition([latlng.lat, latlng.lng]);
+        try {
+            const data = await reverseGeocode(latlng.lat, latlng.lng);
+            setLocationInfo(data.display_name);
+        } catch (error) {
+            setLocationInfo('Fehler beim Abrufen der Ortsinformationen');
+        }
     };
 
     return (
         <div className="map-container">
-            <MapContainer center={[51.505, -0.09]} zoom={13} className="leaflet-container">
+            <MapContainer center={[51.505, -0.09]} zoom={16} className="leaflet-container">
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -87,7 +95,7 @@ const Map = () => {
                 {selectedPosition && (
                     <Marker position={selectedPosition}>
                         <Popup>
-                            Ausgewählte Position: <br /> Latitude: {selectedPosition[0]} <br /> Longitude: {selectedPosition[1]}
+                            Ausgewählte Position: <br /> Latitude: {selectedPosition[0]} <br /> Longitude: {selectedPosition[1]} <br/> {locationInfo}
                         </Popup>
                     </Marker>
                 )}
