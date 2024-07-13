@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, useMapEvents, Marker, Popup } from 'react-leaflet';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../css/Map.css';
 import LocationMarker from './LocationMarker';
-import {reverseGeocode} from "@/js/reverseGeocode";
+import { reverseGeocode } from "@/js/reverseGeocode";
+import { Fab, Icon } from "framework7-react";
+import RoutingMachine from './RoutingMachine';
 
 const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
@@ -34,11 +36,7 @@ const ClickableMap = ({ onClick }) => {
 };
 
 const FlyToMarker = ({ position, popupText }) => {
-    const map = useMapEvents({
-        click() {
-            map.flyTo(position, map.getZoom());
-        },
-    });
+    const map = useMap();
 
     useEffect(() => {
         map.flyTo(position, map.getZoom());
@@ -59,6 +57,9 @@ const Map = () => {
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [locationInfo, setLocationInfo] = useState(null);
     const [error, setError] = useState(null);
+
+    const shouldRenderFlyToMarker = currentPosition !== null;
+    const shouldRenderSelectedMarker = selectedPosition !== null;
 
     // Bestimmt den aktuellen Standort des Nutzers
     useEffect(() => {
@@ -83,6 +84,17 @@ const Map = () => {
         }
     };
 
+    const flyToCurrentPosition = () => {
+        getCurrentLocation()
+            .then((position) => {
+                setCurrentPosition(position);
+            })
+            .catch((error) => {
+                setError(error.message);
+                console.error('Error getting current position:', error);
+            });
+    };
+
     return (
         <div className="map-container">
             <MapContainer center={[51.505, -0.09]} zoom={16} className="leaflet-container">
@@ -90,17 +102,24 @@ const Map = () => {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                {currentPosition && <FlyToMarker position={currentPosition} popupText="You are here" />}
+                {shouldRenderFlyToMarker && <FlyToMarker position={currentPosition} popupText="You are here" />}
                 <ClickableMap onClick={handleMapClick} />
-                {selectedPosition && (
-                    <Marker position={selectedPosition}>
-                        <Popup>
-                            Ausgewählte Position: <br /> Latitude: {selectedPosition[0]} <br /> Longitude: {selectedPosition[1]} <br/> {locationInfo}
-                        </Popup>
-                    </Marker>
+                {shouldRenderSelectedMarker && (
+                    <>
+                        <Marker position={selectedPosition}>
+                            <Popup className="custom-popup">
+                                Ausgewählte Position: <br /> Latitude: {selectedPosition[0]}
+                                <br /> Longitude: {selectedPosition[1]} <br /> {locationInfo}
+                            </Popup>
+                        </Marker>
+                        <RoutingMachine start={currentPosition} end={selectedPosition} />
+                    </>
                 )}
             </MapContainer>
             {error && <div className="error-message">Error: {error}</div>}
+            <Fab position="right-bottom" slot="fixed" onClick={flyToCurrentPosition}>
+                <Icon material="gps_fixed" />
+            </Fab>
         </div>
     );
 };
