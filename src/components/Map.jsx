@@ -1,32 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import React, {useEffect, useState} from 'react';
+import {MapContainer, TileLayer, useMap, useMapEvents} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../css/Map.css';
 import LocationMarker from './LocationMarker';
-import { reverseGeocode } from "@/js/reverseGeocode";
-import { Fab, Icon } from "framework7-react";
+import {Fab, Icon} from "framework7-react";
 import RoutingMachine from './RoutingMachine';
+import {getCurrentLocation, reverseGeocode} from "@/js/locationMethods";
+import {fetchWikipediaInfo, mapAddressComponents} from "@/js/wikipediaAPI";
+import WikipediaInfo from "@/components/WikipediaInfo";
 
-const getCurrentLocation = () => {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error('Geolocation is not supported by your browser'));
-        } else {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    resolve([latitude, longitude]);
-                },
-                (error) => {
-                    reject(error);
-                },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-            );
-        }
-    });
-};
-
-const ClickableMap = ({ onClick }) => {
+const ClickableMap = ({onClick}) => {
     useMapEvents({
         click(event) {
             onClick(event.latlng);
@@ -35,33 +18,27 @@ const ClickableMap = ({ onClick }) => {
     return null;
 };
 
-const FlyToMarker = ({ position, popupText }) => {
+const FlyToMarker = ({position, popupText}) => {
     const map = useMap();
 
     useEffect(() => {
         map.flyTo(position, map.getZoom());
     }, [position, map]);
 
-    return <LocationMarker position={position} popupText={popupText} />;
+    return <LocationMarker position={position} popupText={popupText}/>;
 };
 
-/**
- * Map Component
- * - Zeigt eine Karte mit Leaflet an
- * - Bestimmt den aktuellen Standort des Nutzers
- * - Zeigt den aktuellen Standort auf der Karte an
- * - Ermöglicht das Klicken auf die Karte, um Geo-Koordinaten einer ausgewählten Position anzuzeigen
- */
 const Map = () => {
     const [currentPosition, setCurrentPosition] = useState(null);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [locationInfo, setLocationInfo] = useState(null);
     const [error, setError] = useState(null);
+    const [popupOpened, setPopupOpened] = useState(false);
+    const [wikipediaInfo, setWikipediaInfo] = useState('');
 
     const shouldRenderFlyToMarker = currentPosition !== null;
     const shouldRenderSelectedMarker = selectedPosition !== null;
 
-    // Bestimmt den aktuellen Standort des Nutzers
     useEffect(() => {
         getCurrentLocation()
             .then((position) => {
@@ -73,15 +50,24 @@ const Map = () => {
             });
     }, []);
 
-    // Handhabt das Klicken auf die Karte und setzt die ausgewählte Position
     const handleMapClick = async (latlng) => {
         setSelectedPosition([latlng.lat, latlng.lng]);
         try {
             const data = await reverseGeocode(latlng.lat, latlng.lng);
-            setLocationInfo(data.display_name);
+            const address = mapAddressComponents(data.address);
+            const cityName = address.city || data.display_name;
+            setLocationInfo(cityName);
+            const wikiInfo = await fetchWikipediaInfo(cityName);
+            setWikipediaInfo(wikiInfo);
+            setPopupOpened(true);
         } catch (error) {
             setLocationInfo('Fehler beim Abrufen der Ortsinformationen');
+            setWikipediaInfo('Error fetching Wikipedia info.');
         }
+    };
+
+    const handleMarkerClick = () => {
+        setPopupOpened(true);
     };
 
     const flyToCurrentPosition = () => {
@@ -102,24 +88,25 @@ const Map = () => {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                {shouldRenderFlyToMarker && <FlyToMarker position={currentPosition} popupText="You are here" />}
-                <ClickableMap onClick={handleMapClick} />
+                {shouldRenderFlyToMarker && <FlyToMarker position={currentPosition} popupText="You are here"/>}
+                <ClickableMap onClick={handleMapClick}/>
                 {shouldRenderSelectedMarker && (
                     <>
-                        <Marker position={selectedPosition}>
-                            <Popup className="custom-popup">
-                                Ausgewählte Position: <br /> Latitude: {selectedPosition[0]}
-                                <br /> Longitude: {selectedPosition[1]} <br /> {locationInfo}
-                            </Popup>
-                        </Marker>
-                        <RoutingMachine start={currentPosition} end={selectedPosition} />
+                        <FlyToMarker position={selectedPosition}/>
+                        <RoutingMachine start={currentPosition} end={selectedPosition}/>
                     </>
                 )}
             </MapContainer>
             {error && <div className="error-message">Error: {error}</div>}
             <Fab position="right-bottom" slot="fixed" onClick={flyToCurrentPosition}>
-                <Icon material="gps_fixed" />
+                <Icon material="gps_fixed"/>
             </Fab>
+            <WikipediaInfo
+                query={locationInfo}
+                opened={popupOpened}
+                onClose={() => setPopupOpened(false)}
+                info={wikipediaInfo}
+            />
         </div>
     );
 };
