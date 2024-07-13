@@ -1,6 +1,6 @@
 import React from 'react';
-import {Block, Button, Icon, Page, Sheet, Toolbar} from 'framework7-react';
-import '../css/WikipediaInfo.css'; // Import the CSS file
+import {Block, BlockTitle, Sheet} from 'framework7-react';
+import '../css/WikipediaInfo.css';
 
 const WikipediaInfo = ({query, opened, onClose, info}) => {
     return (
@@ -12,21 +12,19 @@ const WikipediaInfo = ({query, opened, onClose, info}) => {
             swipeToClose
             swipeToStep
         >
-            <div className="sheet-modal-swipe-step">
-                <Toolbar>
-                    <div className="left"><h1>{query}</h1></div>
-                    <div className="right">
-                        <Button small fill sheetClose onClick={onClose} className="wikipedia-sheet-close-button">
-                            <Icon f7="xmark" size="24px"/>
-                        </Button>
+            <div className="sheet-modal-inner" style={{width:'100%'}}>
+                <div className="sheet-modal-swipe-step" id="wikipedia-info">
+                    <div className="wikipedia-sheet-header">
+                        <div className="wikipedia-sheet-title">{query}</div>
                     </div>
-                </Toolbar>
+                </div>
+                <div className="page-content wikipedia-info">
+                    <BlockTitle>
+                        {query}
+                    </BlockTitle>
+                    <Block>{info}</Block>
+                </div>
             </div>
-            <Page style={{padding: '16px'}}>
-                <Block >
-                    {info}
-                </Block>
-            </Page>
         </Sheet>
     );
 };
