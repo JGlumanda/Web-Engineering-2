@@ -6,7 +6,7 @@
     padding: 16px;
     position: sticky;
     top: 0;
-    z-index: 1000; /* Ensure the header stays on top */
+    z-index: 1000;
 }
 
 .wikipedia-sheet-title {
@@ -21,7 +21,6 @@
 
 .wikipedia-sheet-content {
     padding: 16px;
-    line-height: 1.5;
 }
 
 @media (min-width: 1024px) {
@@ -31,4 +30,12 @@
         border-radius: 0;
         box-shadow: -2px 0 5px rgba(0,0,0,0.2);
     }
+}
+
+.navigate-button-container {
+    margin: 16px;
+}
+
+.swipe-handler {
+    padding: 16px;
 }
