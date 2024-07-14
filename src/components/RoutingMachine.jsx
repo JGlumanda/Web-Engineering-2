@@ -2,8 +2,13 @@ import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet-routing-machine';
 import { useMap } from 'react-leaflet';
-import '../css/routingMachine.css'
+import '../css/routingMachine.css';
 
+/**
+ * RoutingMachine component adds routing control to the map.
+ * @param {Array} start - Starting coordinates [latitude, longitude].
+ * @param {Array} end - Ending coordinates [latitude, longitude].
+ */
 const RoutingMachine = ({ start, end }) => {
     const map = useMap();
 
@@ -21,16 +26,6 @@ const RoutingMachine = ({ start, end }) => {
             },
             autoRoute: true,
         }).addTo(map);
-
-        routingControl.on('routesfound', () => {
-            const controlContainer = routingControl.getContainer();
-            if (controlContainer) {
-                const itineraryContainer = controlContainer.querySelector('.leaflet-routing-container');
-                if (itineraryContainer) {
-                    itineraryContainer.style.display = 'none';
-                }
-            }
-        });
 
         return () => {
             map.removeControl(routingControl);
