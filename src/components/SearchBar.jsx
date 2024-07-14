@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Searchbar, List, ListItem } from 'framework7-react';
+import '../css/SearchBar.css'
 
 const NominatimBaseUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=';
 
@@ -38,6 +39,7 @@ const SearchBar = ({ placeholder, onSelectLocation }) => {
                 clearButton
                 customSearch
                 onSearchbarSearch={handleSearch}
+                className={"searchbar"}
             />
             {suggestions.length > 0 && (
                 <List>

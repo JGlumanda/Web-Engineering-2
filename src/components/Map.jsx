@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import React, {useEffect, useState} from 'react';
+import {MapContainer, TileLayer, useMap, useMapEvents} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../css/Map.css';
 import LocationMarker from './LocationMarker';
-import { Fab, Icon } from "framework7-react";
+import {Fab, Icon} from "framework7-react";
 import RoutingMachine from './RoutingMachine';
-import { getCurrentLocation, reverseGeocode } from "@/js/locationMethods";
-import { fetchWikipediaInfo, mapAddressComponents } from "@/js/wikipediaAPI";
+import {getCurrentLocation, reverseGeocode} from "@/js/locationMethods";
+import {fetchWikipediaInfo, mapAddressComponents} from "@/js/wikipediaAPI";
 import WikipediaInfo from "@/components/WikipediaInfo";
 import SearchBar from "@/components/SearchBar";
 
@@ -14,7 +14,7 @@ import SearchBar from "@/components/SearchBar";
  * ClickableMap component to handle map clicks.
  * @param {function} onClick - Function to handle map click events.
  */
-const ClickableMap = ({ onClick }) => {
+const ClickableMap = ({onClick}) => {
     useMapEvents({
         click(event) {
             onClick(event.latlng);
@@ -28,14 +28,14 @@ const ClickableMap = ({ onClick }) => {
  * @param {Array} position - Array containing latitude and longitude.
  * @param {string} popupText - Optional text to display in the popup.
  */
-const FlyToMarker = ({ position, popupText }) => {
+const FlyToMarker = ({position, popupText}) => {
     const map = useMap();
 
     useEffect(() => {
         map.flyTo(position, map.getZoom());
     }, [position, map]);
 
-    return <LocationMarker position={position} popupText={popupText} />;
+    return <LocationMarker position={position} popupText={popupText}/>;
 };
 
 const Map = () => {
@@ -100,8 +100,10 @@ const Map = () => {
     return (
         <div className="map-container">
             <div className="searchbars-container">
-                <SearchBar placeholder="Start location" onSelectLocation={setStartLocation} />
-                <SearchBar placeholder="End location" onSelectLocation={handleSetEndLocation} />
+                <SearchBar placeholder="Start location" onSelectLocation={setStartLocation}/>
+                <SearchBar
+                    placeholder="End location"
+                    onSelectLocation={handleSetEndLocation}/>
             </div>
             <MapContainer
                 center={[51.505, -0.09]}
@@ -113,18 +115,18 @@ const Map = () => {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                {shouldRenderFlyToMarker && <FlyToMarker position={startLocation} popupText="You are here" />}
-                <ClickableMap onClick={handleMapClick} />
+                {shouldRenderFlyToMarker && <FlyToMarker position={startLocation} popupText="You are here"/>}
+                <ClickableMap onClick={handleMapClick}/>
                 {shouldRenderSelectedMarker && (
                     <>
-                        <FlyToMarker position={endLocation} />
-                        <RoutingMachine start={startLocation} end={endLocation} />
+                        <FlyToMarker position={endLocation}/>
+                        <RoutingMachine start={startLocation} end={endLocation}/>
                     </>
                 )}
             </MapContainer>
             {error && <div className="error-message">Error: {error}</div>}
             <Fab position="right-bottom" slot="fixed" onClick={flyToCurrentPosition}>
-                <Icon material="gps_fixed" />
+                <Icon material="gps_fixed"/>
             </Fab>
             <WikipediaInfo
                 query={locationInfo}
