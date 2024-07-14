@@ -8,6 +8,8 @@ export const reverseGeocode = async (lat, lon) => {
     }
 };
 
+// locationMethods.js
+
 export const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
@@ -15,13 +17,24 @@ export const getCurrentLocation = () => {
         } else {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    const { latitude, longitude } = position.coords;
-                    resolve([latitude, longitude]);
+                    resolve([position.coords.latitude, position.coords.longitude]);
                 },
                 (error) => {
-                    reject(error);
-                },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            reject(new Error('User denied the request for Geolocation'));
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            reject(new Error('Location information is unavailable'));
+                            break;
+                        case error.TIMEOUT:
+                            reject(new Error('The request to get user location timed out'));
+                            break;
+                        default:
+                            reject(new Error('An unknown error occurred'));
+                            break;
+                    }
+                }
             );
         }
     });

@@ -1,12 +1,17 @@
-import React, { useState} from 'react';
+import React, { useState, useCallback } from 'react';
 import { Searchbar, List, ListItem } from 'framework7-react';
 
 const NominatimBaseUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=';
 
-const SearchBar = ({ placeholder, onSelectLocation}) => {
+/**
+ * SearchBar component for location search using Nominatim API.
+ * @param {string} placeholder - Placeholder text for the search bar.
+ * @param {function} onSelectLocation - Function to handle location selection.
+ */
+const SearchBar = ({ placeholder, onSelectLocation }) => {
     const [suggestions, setSuggestions] = useState([]);
 
-    const fetchSuggestions = async (query) => {
+    const fetchSuggestions = useCallback(async (query) => {
         if (query.length === 0) {
             setSuggestions([]);
             return;
@@ -15,7 +20,7 @@ const SearchBar = ({ placeholder, onSelectLocation}) => {
         const response = await fetch(`${NominatimBaseUrl}${query}`);
         const data = await response.json();
         setSuggestions(data);
-    };
+    }, []);
 
     const handleSelect = (suggestion) => {
         setSuggestions([]);
