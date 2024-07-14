@@ -63,7 +63,8 @@ const Map = () => {
 
     const handleMapClick = async (latlng) => {
         setEndLocation([latlng.lat, latlng.lng]);
-        await handleWikiPopup();
+        const location = [latlng.lat, latlng.lng]
+        await handleWikiPopup(location);
     };
 
     const flyToCurrentPosition = () => {
@@ -79,12 +80,12 @@ const Map = () => {
 
     const handleSetEndLocation = async (location) => {
         setEndLocation(location);
-        await handleWikiPopup();
+        await handleWikiPopup(location);
     };
 
-    const handleWikiPopup = async () => {
+    const handleWikiPopup = async (location) => {
         try {
-            const data = await reverseGeocode(endLocation[0], endLocation[1]);
+            const data = await reverseGeocode(location[0], location[1]);
             const address = mapAddressComponents(data.address);
             const cityName = address.city || data.display_name;
             setLocationInfo(cityName);
