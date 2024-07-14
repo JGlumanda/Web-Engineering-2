@@ -8,6 +8,7 @@ import RoutingMachine from './RoutingMachine';
 import {getCurrentLocation, reverseGeocode} from "@/js/locationMethods";
 import {fetchWikipediaInfo, mapAddressComponents} from "@/js/wikipediaAPI";
 import WikipediaInfo from "@/components/WikipediaInfo";
+import SearchBar from "@/components/SearchBar";
 
 const ClickableMap = ({onClick}) => {
     useMapEvents({
@@ -29,20 +30,21 @@ const FlyToMarker = ({position, popupText}) => {
 };
 
 const Map = () => {
-    const [currentPosition, setCurrentPosition] = useState(null);
-    const [selectedPosition, setSelectedPosition] = useState(null);
     const [locationInfo, setLocationInfo] = useState(null);
     const [error, setError] = useState(null);
     const [popupOpened, setPopupOpened] = useState(false);
     const [wikipediaInfo, setWikipediaInfo] = useState('');
 
-    const shouldRenderFlyToMarker = currentPosition !== null;
-    const shouldRenderSelectedMarker = selectedPosition !== null;
+    const [startLocation, setStartLocation] = useState(null);
+    const [endLocation, setEndLocation] = useState(null);
+
+    const shouldRenderFlyToMarker = startLocation !== null;
+    const shouldRenderSelectedMarker = endLocation !== null;
 
     useEffect(() => {
         getCurrentLocation()
             .then((position) => {
-                setCurrentPosition(position);
+                setStartLocation(position);
             })
             .catch((error) => {
                 setError(error.message);
@@ -51,9 +53,29 @@ const Map = () => {
     }, []);
 
     const handleMapClick = async (latlng) => {
-        setSelectedPosition([latlng.lat, latlng.lng]);
+        setEndLocation([latlng.lat, latlng.lng]);
+        await handleWikiPopup()
+    };
+
+    const flyToCurrentPosition = () => {
+        getCurrentLocation()
+            .then((position) => {
+                setStartLocation(position);
+            })
+            .catch((error) => {
+                setError(error.message);
+                console.error('Error getting current position:', error);
+            });
+    };
+
+    const handleSetEndLocation = async (location) => {
+        setEndLocation(location);
+        await handleWikiPopup()
+    }
+
+    const handleWikiPopup = async ()  => {
         try {
-            const data = await reverseGeocode(latlng.lat, latlng.lng);
+            const data = await reverseGeocode(endLocation[0], endLocation[1]);
             const address = mapAddressComponents(data.address);
             const cityName = address.city || data.display_name;
             setLocationInfo(cityName);
@@ -64,36 +86,31 @@ const Map = () => {
             setLocationInfo('Fehler beim Abrufen der Ortsinformationen');
             setWikipediaInfo('Error fetching Wikipedia info.');
         }
-    };
+    }
 
-    const handleMarkerClick = () => {
-        setPopupOpened(true);
-    };
-
-    const flyToCurrentPosition = () => {
-        getCurrentLocation()
-            .then((position) => {
-                setCurrentPosition(position);
-            })
-            .catch((error) => {
-                setError(error.message);
-                console.error('Error getting current position:', error);
-            });
-    };
 
     return (
         <div className="map-container">
-            <MapContainer center={[51.505, -0.09]} zoom={16} className="leaflet-container">
+            <div className={"searchbars-container"}>
+                <SearchBar placeholder="Start location" onSelectLocation={setStartLocation}/>
+                <SearchBar placeholder="End location" onSelectLocation={handleSetEndLocation}/>
+            </div>
+            <MapContainer
+                center={[51.505, -0.09]}
+                zoom={16}
+                className="leaflet-container"
+                zoomControl={false}>
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 />
-                {shouldRenderFlyToMarker && <FlyToMarker position={currentPosition} popupText="You are here"/>}
+                {shouldRenderFlyToMarker && <FlyToMarker position={startLocation} popupText="You are here"/>}
                 <ClickableMap onClick={handleMapClick}/>
                 {shouldRenderSelectedMarker && (
                     <>
-                        <FlyToMarker position={selectedPosition}/>
-                        <RoutingMachine start={currentPosition} end={selectedPosition}/>
+                        <FlyToMarker position={endLocation}/>
+                        <RoutingMachine start={startLocation}
+                                        end={endLocation}/>
                     </>
                 )}
             </MapContainer>
